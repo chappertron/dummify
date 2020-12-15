@@ -2,6 +2,8 @@ import MDAnalysis as mda
 import pickle as pkl
 import numpy as np
 import numpy.linalg as la
+
+#TODO add if statements to check whether a compatible version of MDA is being used for parallelisation
 import multiprocessing
 from multiprocessing import Pool
 from functools import partial
@@ -42,7 +44,7 @@ class Dummys:
         '''
 
         # select hydrogens and oxygen atoms within the molecule(residue)
-        O = res.atoms.select_atoms(self._select_Os)
+        O = res.atoms.select_atoms(self._select_Os) # a better approach is to select all Os and then all Hs/every other
         Hs = res.atoms.select_atoms(self._select_hs)
 
 
@@ -59,7 +61,45 @@ class Dummys:
 
         return vect/la.norm(vect)
 
-    def tip4p_M_pos(self,res, M_dist):
+    def unit_dips(self):
+        '''
+            Takes in a residue corresponding to a water molecule and returns the unit vector corresponding to the dipole moment direction, relative to the oxygen atom
+
+            res : a MDAnalysis residue object
+
+            returns: a 3 component nd.array of the unit_dipole vector 
+
+            TODO: make this a static method or an independant function??
+        '''
+
+        # select hydrogens and oxygen atoms within the molecule(residue)
+        # a better approach is to select all Os and then all Hs/every other
+        
+        ag = self.u_water.atoms
+
+        Os = ag.select_atoms(self._select_Os)# select all hydrogens!!!
+        Hs = ag.select_atoms(self._select_hs)
+
+        # check that there are only 2 hydrogens present
+        if len(Hs) != 2*len(Os):
+            raise ValueError(
+                'There must only be two hydrogens in a water molecule!!!')
+        # get the H positions relative to oxygen atom
+        # O is indexed because to should be a list of just one atom!
+        posO = Os.positions
+        posH1 = Hs.positions[::2]
+        posH2 = Hs.positions[1::2]
+        #OH_poses = [h.position - O[0].position for h in Hs]
+        HO1 = posH1-posO
+        HO2 = posH2-posO
+
+        #can simply take the sum because the OH vectors should lie in the same plane and their x components are opposite in the plane frame, so cancel, leaving only the y compoenent
+
+        vect = HO1 + HO2
+
+        return vect/la.norm(vect)
+
+    def tip4p_M_poses(self, M_dist):
         '''
             Sets the virtual site position to be a residue a specified distance away from the oxygen atom, along the direction of the dipole moment vector
 
@@ -70,13 +110,15 @@ class Dummys:
 
         
         '''
-        O = res.atoms.select_atoms(self._select_Os)
+        rO = self.u_water.atoms.select_atoms(self._select_Os).positions # slight inefficiency here, having to reselect oxygen positions
 
-        unit_vector = self.unit_dip(res)
+        unit_vectors = self.unit_dips()
 
-        return O[0].position + unit_vector * M_dist
+        return rO + unit_vectors * M_dist
 
     def _find_dummy_positions_timeframe(self,frame_index, positioner = 'TIP4P', params = {'m_dist': 0.1546}, N_dummy = 1,):
+        '''find dummy atom positions for a single timeframe'''
+        
         t = frame_index
         # set the trajectory frame
         self.u_water.trajectory[t]
@@ -84,7 +126,7 @@ class Dummys:
         if positioner == 'TIP4P':
             # use default tip4p_M_pos
             m_dist = params['m_dist']
-            return [self.tip4p_M_pos(res, m_dist) for r, res in enumerate(w_residues)]
+            return self.tip4p_M_poses(m_dist)
         elif type(positioner) == callable:
             # use this, needs to take in a residue as an input and some parameters
             return [positioner(res, **params) for res in w_residues]
@@ -113,8 +155,6 @@ class Dummys:
         self.m_vectors = np.empty((len(self.u_water.trajectory), len(w_residues), 3))
 
         frame_indexes  = np.arange(self.u_water.trajectory.n_frames)
-
-
 
         # calculates this for all residues Using partial so nothing needs to be inputted except t)
         run_per_frame = partial(self._find_dummy_positions_timeframe,
@@ -222,7 +262,7 @@ class Dummys:
     
 if __name__ == "__main__":
     
-    water_Dummy = Dummys('example_trj/tip4p05.data','example_trj/nemd.dcd')
+    #water_Dummy = Dummys('example_trj/tip4p05.data','example_trj/nemd.dcd')
 
 
     # water_Dummy.find_dummy_positions(positioner = 'TIP4P', params = {'m_dist': 0.1546}, N_dummy = 1, re_write = False, pickle = 'm_vectors_para.pkl', Ncores=4)
@@ -248,3 +288,18 @@ if __name__ == "__main__":
     rand_j = np.random.randint(low=0,high = len(m_vect_p[0]))
     print(f'random time frame and residues {rand_i} {rand_j}')
     print([i[rand_i][rand_j] for i in m_vects])
+
+
+
+    ### testing new implementation,calculating directions of dip vectors
+
+    uni = mda.Universe('example_trj/tip4p05.data', 'example_trj/nemd.dcd')
+    water_Dummy = Dummys(uni)
+    # this interface doesn't really make sense, should be a static method or just a method with no positional args
+    dip_units = water_Dummy.unit_dips()
+
+
+    water_Dummy.find_dummy_positions(pickle='m_vectors_fast.pkl')
+
+    print(dip_units)
+    print(dip_units.shape)

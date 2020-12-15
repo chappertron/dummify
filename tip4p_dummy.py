@@ -14,8 +14,8 @@ print('MDAnalysis version: ' + mda_ver)
 # for handling command line arguemnts 
 
 import argparse
-parser = argparse.ArgumentParser(description='Generates the positions of dummy atoms of water molecules with a tip4p geometry. This can be done for just a single frame, or an entire trajectory')
 
+parser = argparse.ArgumentParser(description='Generates the positions of dummy atoms of water molecules with a tip4p geometry. This can be done for just a single frame, or an entire trajectory')
 parser.add_argument("topfile",help='The topology file name',type=str)
 # optional trajectory argument -t
 parser.add_argument("-f","--trajfile", default = None,type=str,metavar='Trajectory')
@@ -33,6 +33,7 @@ parser.add_argument("-H","--type_H",default=2)
 parser.add_argument("-M","--type_M",default='M')
 parser.add_argument("--overwrite",default=False, action='store_true')
 parser.add_argument("--fname",default=None,help='output file prefix defaults to the top file prefix')
+parser.add_argument("-m","--inmem",default=None,help='Trajectory')
 
 
 # collect the arguments for use in runnign the program
@@ -44,7 +45,6 @@ else:
     u_water = mda.Universe(args.topfile)
 
 if args.verbose:
-    print('hello!!! You let me speak!!')
     print(f'Loaded a universe: {u_water}')
 
 # defaults to tip4p/2005 parameters. can be overidden with command line argument -q
