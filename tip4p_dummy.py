@@ -32,7 +32,7 @@ parser.add_argument("-O","--type_O",default=1)
 parser.add_argument("-H","--type_H",default=2)
 parser.add_argument("-M","--type_M",default='M')
 parser.add_argument("--overwrite",default=False, action='store_true')
-parser.add_argument("--fname",default=None,help='output file prefix defaults to the top file prefix')
+parser.add_argument("--fname",default='addedMs',help='output file prefix defaults to the top file prefix')
 parser.add_argument("-m","--inmem",default=None,help='Trajectory')
 parser.add_argument("-r","--reloadM",default=None,help='Reload a previously computed vector of positions')
 
@@ -47,7 +47,9 @@ else:
     u_water = mda.Universe(args.topfile)
 
 if args.verbose:
-    print(f'Loaded a universe: {u_water}')
+    print(f'Loaded a universe: {u_water} from {args.topfile}')
+    if args.trajfile:
+        print(f'with a Trajectory of length {u_water.trajectory.} from {args.trajfile}')
 
 # defaults to tip4p/2005 parameters. can be overidden with command line argument -q
 qM,qH = args.charges
@@ -71,24 +73,27 @@ else:
 # calculate the vectors and store them as a .pkl just in case
 w_dummy = Dummys(u_water,type_O=args.type_O,type_H=args.type_H,m_type=args.type_M)
 if __name__ == "__main__":
-    if args.reloadM: # check if none or notes
+    if False:#args.reloadM: # check if none or notes
         try:
             # try to reload the vectors and initialise the dummy universe
             w_dummy.create_dummy_universe(reload=args.reloadM)
 
         except:
+
+            # couldn't reload, recalculating
             # if cannot reload, calculate again
                 m_vectors = w_dummy.find_dummy_positions(positioner = 'TIP4P', params = {'m_dist':args.Mdist}, 
                     re_write = args.overwrite, pickle = args.Mpickle, Ncores=n_cores,verbose=args.verbose)
                 w_dummy.create_dummy_universe()
     else:
-        m_vectors = w_dummy.find_dummy_positions(positioner = 'TIP4P', params = {'m_dist':args.Mdist}, 
-                    re_write = args.overwrite, pickle = args.Mpickle, Ncores=n_cores,verbose=args.verbose)
+        #trying to see if calculating dummys on the fly is tractable
+        #m_vectors = w_dummy.find_dummy_positions(positioner = 'TIP4P', params = {'m_dist':args.Mdist}, 
+        #             re_write = args.overwrite, pickle = args.Mpickle, Ncores=n_cores,verbose=args.verbose)
         w_dummy.create_dummy_universe()
 
     
     if args.verbose:
-        print('Dummy universe created' + w_dummy._M_universe)
+        print('Dummy universe created',w_dummy._M_universe)
     # writing topology
     w_dummy.write_Ms(fname, top_format='.pqr', traj_format='.dcd')
 

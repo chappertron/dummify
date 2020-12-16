@@ -1,2 +1,1 @@
-import .add_dummy
-import .tip4p_dummy
+from .add_dummy import Dummys

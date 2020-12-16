@@ -69,7 +69,8 @@ class Dummys:
 
             returns: a 3 component nd.array of the unit_dipole vector 
 
-            TODO: make this a static method or an independant function??
+            TODO: Change implementation so this is called directly whilst writing files
+
         '''
 
         # select hydrogens and oxygen atoms within the molecule(residue)
@@ -176,12 +177,18 @@ class Dummys:
         return self.m_vectors
 
 
-    def create_dummy_universe(self, reload = None):
+    def create_dummy_universe(self, reload = None, M_dist = 0.1546):
+        '''Creates empty dummy universe, doesn't need whole array of m_vectors
         
-        if reload:
-            #reload specified pickle file of vectors
-            with open(reload,'rb') as stream:
-                self.m_vectors = pkl.load(stream)
+            TODO: create a dt attribute of this class so that the timestep doesn't get set to the weird dcd default.
+            have a default of 1 fs instead
+            TODO: add option for not computing on the fly for sadists
+        
+        '''
+        # if reload:
+        #     #reload specified pickle file of vectors
+        #     with open(reload,'rb') as stream:
+        #         self.m_vectors = pkl.load(stream)
 
         n_atoms = self.u_water.residues.n_residues  # 1 m per moleculethe number of residues # may need to account for different numbers for general usage
         
@@ -210,7 +217,7 @@ class Dummys:
 
         # set positions of the dummy atoms to the first frame
 
-        self._M_universe.atoms.positions = self.m_vectors[0]
+        self._M_universe.atoms.positions = self.tip4p_M_poses(M_dist=M_dist) # calculate M_dist positions
     
 
         # merged system
@@ -230,10 +237,11 @@ class Dummys:
         self.merged.select_atoms(self._select_Os).charges=[0]*n_residues
         self.merged.select_atoms(self._select_Os).names=['O']*n_residues
         self.merged.select_atoms(self._select_hs).names=['H']*n_residues*2
+        self.merged.select_atoms(f'type {self.dummy_type}').names=['M']*n_residues
 
 
     # to do find a decent topology format!!!!
-    def write_Ms(self, prefix,top_format = '.pdbqt', traj_format = '.dcd'): 
+    def write_Ms(self, prefix,top_format = '.pdbqt', traj_format = '.dcd',M_dist = 0.1546,verbose = True): 
         '''Write a trajectory to file that includes the dummy atoms.
             Currently need a topology format that specifies the masses and charges 
          '''
@@ -246,15 +254,18 @@ class Dummys:
 
         n_atoms = self.merged.atoms.n_atoms
         with mda.Writer(prefix+traj_format,n_atoms,dt=dt,format = 'LAMMPS') as W:
+            
+            merged_dummys = self.merged.select_atoms('type M').atoms
+            merged_other = self.merged.select_atoms('not (type M)').atoms
             for t in range(0,n_steps):
                 # set orginal water trajectory step
                 self.u_water.trajectory[t]
                 # set M coordinates to be corresponding from vector
-                self.merged.select_atoms('type M').atoms.positions = self.m_vectors[t]
+                merged_dummys.positions = self.tip4p_M_poses(M_dist=M_dist) #calc on the fly and dump... probs faster than dumping a pickle
                 #set other positons
-                self.merged.select_atoms('not (type M)').atoms.positions = self.u_water.atoms.positions
+                merged_other.positions = self.u_water.atoms.positions
                 
-                if t%100==0: print(dt*t,self.merged.atoms.types)
+                if t%100==0 and verbose: print(dt*t,f'step {t}',self.merged.atoms.types)
                 W.write(self.merged)
         with mda.Writer(prefix+top_format,n_atoms) as W:
             W.write(self.merged)
