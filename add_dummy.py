@@ -253,7 +253,7 @@ class Dummys:
         self.u_water.trajectory[0]
 
         n_atoms = self.merged.atoms.n_atoms
-        with mda.Writer(prefix+traj_format,n_atoms,dt=dt,format = 'LAMMPS') as W:
+        with mda.Writer(prefix+traj_format,n_atoms,dt=dt) as W:
             
             merged_dummys = self.merged.select_atoms('type M').atoms
             merged_other = self.merged.select_atoms('not (type M)').atoms

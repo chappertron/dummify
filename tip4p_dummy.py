@@ -35,6 +35,8 @@ parser.add_argument("--overwrite",default=False, action='store_true')
 parser.add_argument("--fname",default='addedMs',help='output file prefix defaults to the top file prefix')
 parser.add_argument("-m","--inmem",default=None,help='Trajectory')
 parser.add_argument("-r","--reloadM",default=None,help='Reload a previously computed vector of positions')
+parser.add_argument("-o","--trajectory_out",default='.dcd',help='Give a default file name for the trajectory dump, if not specified, tries to do same extension',)
+parser.add_argument("-p","--topfile_out",default='.pdbqt',help='Give a name for outputted top file')
 
 
 
@@ -49,7 +51,7 @@ else:
 if args.verbose:
     print(f'Loaded a universe: {u_water} from {args.topfile}')
     if args.trajfile:
-        print(f'with a Trajectory of length {u_water.trajectory.} from {args.trajfile}')
+        print(f'with a Trajectory of length {u_water.trajectory.n_frames} from {args.trajfile}')
 
 # defaults to tip4p/2005 parameters. can be overidden with command line argument -q
 qM,qH = args.charges
@@ -95,6 +97,6 @@ if __name__ == "__main__":
     if args.verbose:
         print('Dummy universe created',w_dummy._M_universe)
     # writing topology
-    w_dummy.write_Ms(fname, top_format='.pqr', traj_format='.dcd')
+    w_dummy.write_Ms(fname, top_format=args.topfile_out, traj_format=args.trajectory_out) # writeing
 
     print(w_dummy.merged.dimensions)
