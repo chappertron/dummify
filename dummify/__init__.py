@@ -1,1 +1,1 @@
-from .add_dummy import Dummys
+from .add_dummy import *
