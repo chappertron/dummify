@@ -2,7 +2,7 @@
 # A script for adding the virtual charged sites for a tip4p/05 model
 
 import MDAnalysis as mda
-from add_dummy import Dummys
+from dummify import Dummys
 
 mda_ver = mda.__version__.split('-')[0] # to remove -dev0 if a development version is being used
 print('MDAnalysis version: ' + mda_ver)
