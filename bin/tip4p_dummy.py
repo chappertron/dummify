@@ -14,6 +14,7 @@ print('MDAnalysis version: ' + mda_ver)
 # for handling command line arguemnts 
 
 import argparse
+import time
 
 parser = argparse.ArgumentParser(description='Generates the positions of dummy atoms of water molecules with a tip4p geometry. This can be done for just a single frame, or an entire trajectory')
 parser.add_argument("topfile",help='The topology file name',type=str)
@@ -47,6 +48,9 @@ if args.trajfile:
     u_water = mda.Universe(args.topfile,args.trajfile,in_memory = args.inmem)
 else:
     u_water = mda.Universe(args.topfile,in_memory = args.inmem)
+
+if args.verbose:
+    print(f'Start time: {time.strftime("%a, %d %b %Y %H:%M:%S")}')
 
 if args.verbose:
     print(f'Loaded a universe: {u_water} from {args.topfile}')
@@ -100,3 +104,6 @@ if __name__ == "__main__":
     w_dummy.write_Ms(fname, top_format=args.topfile_out, traj_format=args.trajectory_out) # writeing
 
     print(w_dummy.merged.dimensions)
+
+if args.verbose:
+    print(f'Finish time: {time.strftime("%a, %d %b %Y %H:%M:%S")}')

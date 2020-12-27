@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(
-    name='Dummify',
+    name='dummify',
     version='0.0.001',
     author='Aidan C',
     packages=['dummify'],
