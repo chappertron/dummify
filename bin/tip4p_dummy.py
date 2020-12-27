@@ -33,7 +33,7 @@ parser.add_argument("-H","--type_H",default=2)
 parser.add_argument("-M","--type_M",default='M')
 parser.add_argument("--overwrite",default=False, action='store_true')
 parser.add_argument("--fname",default='addedMs',help='output file prefix defaults to the top file prefix')
-parser.add_argument("-m","--inmem",default=None,help='Trajectory')
+parser.add_argument("-m","--inmem",default=False,action="store_true",help='Load Trajectory Into memory')
 parser.add_argument("-r","--reloadM",default=None,help='Reload a previously computed vector of positions')
 parser.add_argument("-o","--trajectory_out",default='.dcd',help='Give a default file name for the trajectory dump, if not specified, tries to do same extension',)
 parser.add_argument("-p","--topfile_out",default='.pdbqt',help='Give a name for outputted top file')
@@ -44,9 +44,9 @@ parser.add_argument("-p","--topfile_out",default='.pdbqt',help='Give a name for 
 args = parser.parse_args()
 print(args.topfile)
 if args.trajfile: 
-    u_water = mda.Universe(args.topfile,args.trajfile)
+    u_water = mda.Universe(args.topfile,args.trajfile,in_memory = args.inmem)
 else:
-    u_water = mda.Universe(args.topfile)
+    u_water = mda.Universe(args.topfile,in_memory = args.inmem)
 
 if args.verbose:
     print(f'Loaded a universe: {u_water} from {args.topfile}')
