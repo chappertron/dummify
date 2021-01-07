@@ -97,8 +97,8 @@ class Dummys:
         #can simply take the sum because the OH vectors should lie in the same plane and their x components are opposite in the plane frame, so cancel, leaving only the y compoenent
 
         vect = HO1 + HO2
-
-        return vect/la.norm(vect)
+        # was an issue here, because vector of many atoms, nrom is calculated not per atom but of whole vect array 
+        return vect/la.norm(vect,axis=1)[:,None] #weird indexing adds another axis
 
     def tip4p_M_poses(self, M_dist):
         '''
@@ -211,7 +211,19 @@ class Dummys:
         self._M_universe.add_TopologyAttr('segid', ['SYSTEM'])
         self._M_universe.add_TopologyAttr('charge', [self.dummy_charge]*n_residues)
         self._M_universe.add_TopologyAttr('masses', [self.dummy_mass]*n_residues)
+        
+        # needs to be implemented to have a .data type, for some reason!!! 
+        # however need to set bond types
+        # self._M_universe.add_TopologyAttr('bonds',[[i,i] for i in range(n_residues)])
+        # self._M_universe.add_TopologyAttr('angles',[[i,i,i] for i in range(n_residues)])
+        # self._M_universe.add_TopologyAttr('dihedrals',[[i,i,i,i] for i in range(n_residues)])
+        # self._M_universe.add_TopologyAttr('impropers',[[i,i,i,i] for i in range(n_residues)])
         self._M_universe.dimensions=self.u_water.dimensions    
+
+        # self._M_universe.bonds.types()
+        # self._M_universe.angles.types()
+        # self._M_universe.dihedrals.types()
+        # self._M_universe.impropers.types()
 
         #extra depending on the type
 
@@ -265,7 +277,7 @@ class Dummys:
                 #set other positons
                 merged_other.positions = self.u_water.atoms.positions
                 
-                if t%100==0 and verbose: print(dt*t,f'step {t}',self.merged.atoms.types)
+                if t%100==0 and verbose: print(dt*t,f'step {t}')
                 W.write(self.merged)
         with mda.Writer(prefix+top_format,n_atoms) as W:
             W.write(self.merged)
