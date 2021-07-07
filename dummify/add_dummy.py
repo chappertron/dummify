@@ -270,19 +270,7 @@ class Dummys:
         n_atoms = self.merged.atoms.n_atoms
         merged_dummys = self.merged.select_atoms('type M').atoms
         merged_other = self.merged.select_atoms('not (type M)').atoms
-        #write topology first???
-        try:
-            with mda.Writer(prefix+top_format, n_atoms) as W:
-                # calc on the fly and dump... probs faster than dumping a pickle
-                # set positions of initial dummy atoms
-                merged_dummys.positions = self.tip4p_M_poses(M_dist=M_dist)
-                #set other positons
-                merged_other.positions = self.u_water.atoms.positions
-                W.write(self.merged)
-        except Exception as e:
-            print('Could not write dummed topology file!!!')
-            traceback.print_exc(e) # print the exception
-            pass 
+        
     
         with mda.Writer(prefix+traj_format,n_atoms,dt=dt) as W:
             ### get atoms from the merged universe
@@ -298,6 +286,21 @@ class Dummys:
                 W.write(self.merged)
         
 
+        ## for topology case, wrap the coordinates around in the box, to prevent issues with coordinates being outside the box.
+        #write topology first???
+        box_vect = self.u_water.dimensions[:3] ### vector of the box coordinates
+        try:
+            with mda.Writer(prefix+top_format, n_atoms) as W:
+                # calc on the fly and dump... probs faster than dumping a pickle
+                # set positions of initial dummy atoms
+                merged_dummys.positions = self.tip4p_M_poses(M_dist=M_dist) % box_vect
+                #set other positons
+                merged_other.positions = self.u_water.atoms.positions % box_vect ## wrap coordinates. Ok to do, because topology only definies connectivity
+                W.write(self.merged)
+        except Exception as e:
+            print('Could not write dummed topology file!!!')
+            traceback.print_exc(e)  # print the exception
+            pass
     
 if __name__ == "__main__":
     
