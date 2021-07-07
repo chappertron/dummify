@@ -3,6 +3,8 @@ import pickle as pkl
 import numpy as np
 import numpy.linalg as la
 
+import traceback
+
 #TODO add if statements to check whether a compatible version of MDA is being used for parallelisation
 import multiprocessing
 from multiprocessing import Pool
@@ -266,17 +268,24 @@ class Dummys:
         self.u_water.trajectory[0]
 
         n_atoms = self.merged.atoms.n_atoms
+        merged_dummys = self.merged.select_atoms('type M').atoms
+        merged_other = self.merged.select_atoms('not (type M)').atoms
         #write topology first???
         try:
             with mda.Writer(prefix+top_format, n_atoms) as W:
+                # calc on the fly and dump... probs faster than dumping a pickle
+                # set positions of initial dummy atoms
+                merged_dummys.positions = self.tip4p_M_poses(M_dist=M_dist)
+                #set other positons
+                merged_other.positions = self.u_water.atoms.positions
                 W.write(self.merged)
-        except:
+        except Exception as e:
             print('Could not write dummed topology file!!!')
+            traceback.print_exc(e) # print the exception
             pass 
+    
         with mda.Writer(prefix+traj_format,n_atoms,dt=dt) as W:
-            
-            merged_dummys = self.merged.select_atoms('type M').atoms
-            merged_other = self.merged.select_atoms('not (type M)').atoms
+            ### get atoms from the merged universe
             for t in range(0,n_steps):
                 # set orginal water trajectory step
                 self.u_water.trajectory[t]
