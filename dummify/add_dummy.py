@@ -11,12 +11,13 @@ from functools import partial
 
 class Dummys:
     
-    def __init__(self,universe, type_O = 1, type_H = 2, m_type='M',load_into_memory = False):
+    def __init__(self,universe, type_O = 1, type_H = 2, m_type='M',load_into_memory = False,verbose=False):
         '''Takes in an mda.Universe object, not the raw files'''
         #self.ftraj = water_traj
         self.type_O = type_O 
         self.type_H = type_H
         
+        self._verbose = verbose
 
         if type(self.type_H) == list or type(self.type_H) == tuple :
             self._select_hs = f"type {' '.join([str(i) for i in self.type_H])}"
@@ -265,6 +266,13 @@ class Dummys:
         self.u_water.trajectory[0]
 
         n_atoms = self.merged.atoms.n_atoms
+        #write topology first???
+        try:
+            with mda.Writer(prefix+top_format, n_atoms) as W:
+                W.write(self.merged)
+        except:
+            print('Could not write dummed topology file!!!')
+            pass 
         with mda.Writer(prefix+traj_format,n_atoms,dt=dt) as W:
             
             merged_dummys = self.merged.select_atoms('type M').atoms
@@ -279,8 +287,7 @@ class Dummys:
                 
                 if t%100==0 and verbose: print(dt*t,f'step {t}')
                 W.write(self.merged)
-        with mda.Writer(prefix+top_format,n_atoms) as W:
-            W.write(self.merged)
+        
 
     
 if __name__ == "__main__":

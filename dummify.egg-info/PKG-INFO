@@ -1,0 +1,13 @@
+Metadata-Version: 1.0
+Name: dummify
+Version: 0.0.1
+Summary: An awesome package that does something
+Home-page: http://pypi.python.org/pypi/PackageName/
+Author: Aidan C
+Author-email: UNKNOWN
+License: UNKNOWN
+Description: This package adds virutual massless atoms.
+        
+        Currently aimed at tip4p water models, really only with TIP4P/2005 parameters as well, flexibility for other 4 body water models is getting there
+        
+Platform: UNKNOWN

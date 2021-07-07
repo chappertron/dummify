@@ -1,0 +1,10 @@
+README.md
+setup.py
+bin/tip4p_dummy.py
+dummify/__init__.py
+dummify/add_dummy.py
+dummify.egg-info/PKG-INFO
+dummify.egg-info/SOURCES.txt
+dummify.egg-info/dependency_links.txt
+dummify.egg-info/requires.txt
+dummify.egg-info/top_level.txt

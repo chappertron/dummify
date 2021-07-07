@@ -101,6 +101,7 @@ if __name__ == "__main__":
     if args.verbose:
         print('Dummy universe created',w_dummy._M_universe)
     # writing topology
+    
     w_dummy.write_Ms(fname, top_format=args.topfile_out, traj_format=args.trajectory_out) # writeing
 
     print(w_dummy.merged.dimensions)
