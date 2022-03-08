@@ -32,6 +32,8 @@ parser.add_argument("--Mpickle", default='m_vects.pkl')
 parser.add_argument("-O","--type_O",default=1)
 parser.add_argument("-H","--type_H",default=2)
 parser.add_argument("-M","--type_M",default='M')
+### TODO add arguments for giving names to the other atom types in the file.
+
 parser.add_argument("--overwrite",default=False, action='store_true')
 parser.add_argument("--fname",default='addedMs',help='output file prefix defaults to the top file prefix')
 parser.add_argument("-m","--inmem",default=False,action="store_true",help='Load Trajectory Into memory')
