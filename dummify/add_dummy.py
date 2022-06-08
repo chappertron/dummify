@@ -1,3 +1,6 @@
+### TODO add name assignment to the other atoms in the system.
+### TODO make this script work with LAMMPS data files too!
+
 import MDAnalysis as mda
 import pickle as pkl
 import numpy as np
@@ -5,7 +8,7 @@ import numpy.linalg as la
 
 import traceback
 
-#TODO add if statements to check whether a compatible version of MDA is being used for parallelisation
+
 import multiprocessing
 from multiprocessing import Pool
 from functools import partial
@@ -192,17 +195,22 @@ class Dummys:
         #     #reload specified pickle file of vectors
         #     with open(reload,'rb') as stream:
         #         self.m_vectors = pkl.load(stream)
-
-        n_atoms = self.u_water.residues.n_residues  # 1 m per moleculethe number of residues # may need to account for different numbers for general usage
         
-        n_residues = n_atoms
-        resindices = np.arange(0, n_atoms)
+        # 1 m per moleculethe number of residues # may need to account for different numbers for general usage
+
+        # TODO will cause issues if: there are oxygens of the type in other molecules
+        # TODO Can't add the non-water molecules back
+
+        n_residues = len(self.u_water.select_atoms(self._select_Os)) ###   rather than u.residues.n_residues, do this for the number of oxygens
+        
+        print(n_residues)
+        resindices = np.arange(0, n_residues)
         segindices = [0]*n_residues
 
         atom_resindex = resindices
         n_segments = 1
         # create a mda.Universe to merge with the input one and then the trajectory can be written
-        self._M_universe = mda.Universe.empty(n_atoms, n_residues=n_residues,
+        self._M_universe = mda.Universe.empty(n_residues, n_residues=n_residues,
                                                 atom_resindex=resindices,
                                                 residue_segindex=segindices,
                                                 trajectory=True)
@@ -232,8 +240,9 @@ class Dummys:
 
         # set positions of the dummy atoms to the first frame
 
+        print(len(self.tip4p_M_poses(M_dist=M_dist)))
+        print(self._M_universe.atoms.positions.shape)
         self._M_universe.atoms.positions = self.tip4p_M_poses(M_dist=M_dist) # calculate M_dist positions
-    
 
         # merged system
         u_water_to_merge = self.u_water.atoms
